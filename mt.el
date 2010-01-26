@@ -499,7 +499,7 @@
 	    (goto-char (point-min))
 	    (while (re-search-forward "<" nil t)
 	      (replace-match "&lt;" nil nil))  ;; can't have bare <
-	    (buffer-string))
+	    (encode-coding-string (buffer-string) 'utf-8))
 	(if buf (kill-buffer buf))))))
 
 (defun wrap-paragraphs (string)
@@ -541,8 +541,8 @@
 
 (defun weblog-insert-post-contents (post)
   (setq post-id (cdr (assoc "postid" post)))
-  (setq post-title (cdr (assoc "title" post)))
-  (setq post-body (cdr (assoc "description" post)))
+  (setq post-title (decode-coding-string (cdr (assoc "title" post)) 'utf-8))
+  (setq post-body (decode-coding-string (cdr (assoc "description" post)) 'utf-8))
   (insert "Post Id: ")
   (insert post-id)
   (insert " [erase this line to create a new post]\n")
@@ -633,7 +633,7 @@ string."
   (mapc
    (lambda (log-info)
      (if (string= (or log-id weblog-id) (cdr (assoc "blogid" log-info)))
-	 (setq weblog-name (cdr (assoc "blogName" log-info)))))
+	 (setq weblog-name (decode-coding-string (cdr (assoc "blogName" log-info)) 'utf-8))))
    (blogger-get-users-blogs))
   weblog-name)
 
@@ -695,7 +695,7 @@ string."
 	    (mt-post-secondary post-categories))
       (list (cons "cat-id" cat-id)
 	    (cons "cat-name" 
-		  (cdr (assoc "categoryName" category)))
+		  (decode-coding-string (cdr (assoc "categoryName" category)) 'utf-8))
 	    (cons "primary" 
 		  (is-primary-p cat-id cat-primary))
 	    (cons "secondary" 
