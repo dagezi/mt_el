@@ -208,6 +208,10 @@
   :group 'weblog
   :type 'boolean)
 
+(defcustom weblog-api-encoding 'utf-8
+  "MetaWeblog API Charset"
+  :group 'weblog
+  :type 'string)
 
 (defvar mt-mode-map
   (let ((map (make-sparse-keymap)))
@@ -326,8 +330,8 @@
   (mapcar 
    (lambda (post)
      (setq post-id (cdr (assoc "postid" post)))
-     (setq post-title (cdr (assoc "title" post)))
-     (setq post-body (cdr (assoc "description" post)))
+     (setq post-title (decode-coding-string (cdr (assoc "title" post)) weblog-api-encoding))
+     (setq post-body (decode-coding-string (cdr (assoc "description" post)) weblog-api-encoding))
      (insert post-id)
      (insert " ")
      (insert post-title)
@@ -499,7 +503,7 @@
 	    (goto-char (point-min))
 	    (while (re-search-forward "<" nil t)
 	      (replace-match "&lt;" nil nil))  ;; can't have bare <
-	    (encode-coding-string (buffer-string) 'utf-8))
+	    (encode-coding-string (buffer-string) weblog-api-encoding))
 	(if buf (kill-buffer buf))))))
 
 (defun wrap-paragraphs (string)
@@ -536,13 +540,13 @@
       
       (goto-char (point-min))
       (if (re-search-forward "^Post Id:[ \t]*\\([0-9]*\\).*$" nil t)
-	  (setq post-id (match-string 1))
+	  (setq post-id (string-make-unibyte (match-string 1)))
 	(setq post-id nil)))))
 
 (defun weblog-insert-post-contents (post)
   (setq post-id (cdr (assoc "postid" post)))
-  (setq post-title (decode-coding-string (cdr (assoc "title" post)) 'utf-8))
-  (setq post-body (decode-coding-string (cdr (assoc "description" post)) 'utf-8))
+  (setq post-title (decode-coding-string (cdr (assoc "title" post)) weblog-api-encoding))
+  (setq post-body (decode-coding-string (cdr (assoc "description" post)) weblog-api-encoding))
   (insert "Post Id: ")
   (insert post-id)
   (insert " [erase this line to create a new post]\n")
@@ -633,7 +637,7 @@ string."
   (mapc
    (lambda (log-info)
      (if (string= (or log-id weblog-id) (cdr (assoc "blogid" log-info)))
-	 (setq weblog-name (decode-coding-string (cdr (assoc "blogName" log-info)) 'utf-8))))
+	 (setq weblog-name (decode-coding-string (cdr (assoc "blogName" log-info)) weblog-api-encoding))))
    (blogger-get-users-blogs))
   weblog-name)
 
@@ -695,7 +699,7 @@ string."
 	    (mt-post-secondary post-categories))
       (list (cons "cat-id" cat-id)
 	    (cons "cat-name" 
-		  (decode-coding-string (cdr (assoc "categoryName" category)) 'utf-8))
+		  (decode-coding-string (cdr (assoc "categoryName" category)) weblog-api-encoding))
 	    (cons "primary" 
 		  (is-primary-p cat-id cat-primary))
 	    (cons "secondary" 
